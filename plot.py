@@ -22,6 +22,10 @@ with open("data.in") as input_file:
 
 for index in range(len(tab_x)):
     tab_x2.append(tab_x[index])
-    tab_y2.append(compute_value(best, tab_x[index]))
+    value_y = compute_value(best, tab_x[index])
+    tab_y2.append(value_y)
+    diff = abs(value_y - tab_y[index])
+    if diff > 0.0001:
+        print(tab_x[index], value_y, tab_y[index])
 
 plotly.offline.plot([go.Scatter(x=tab_x, y=tab_y), go.Scatter(x=tab_x2, y=tab_y2)], filename='compare-results-tmp.html')

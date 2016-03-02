@@ -10,7 +10,7 @@ coefs_size = 6
 proba_crossover = 0.85
 proba_mutation = 0.0001
 mutation_rate = 0.00001
-nb_turns = 3000
+nb_turns = 1500
 
 
 tab_x = list()
@@ -28,27 +28,6 @@ with open("data.in") as input_file:
 
 tab_x = real_tab_x
 tab_y = real_tab_y
-
-"""
-def find_average_y_value(x):
-    for index in range(len(real_tab_x)):
-        if real_tab_x[index] > x:
-            if index > 0:
-                return (real_tab_y[index - 1] + real_tab_y[index]) / 2
-            return real_tab_y[index]
-    return real_tab_y[-1]
-
-x = -20
-while x <= 900:
-    tab_x.append(float(x))
-    tab_y.append(float(find_average_y_value(x)))
-    if x >= 650 and x <= 850:
-        x += 3
-    elif x >= 800:
-        x += 7
-    else:
-        x += 50
-"""
 
 def compute_value(coefs, x):
     return coefs[0] + coefs[1] * x + coefs[2] * x * x + coefs[3] * x * x * x + coefs[4] * x * x * x * x + coefs[5] * x * x * x * x * x
@@ -78,7 +57,7 @@ class solutionIndividual:
             mutation_value *= -1
         self.coefs[index] += mutation_value
 
-    def crossover(self, other):
+    def crossover(self, other): # Wright 1991
         coefs1 = list(self.coefs)
         coefs2 = list(self.coefs)
         coefs3 = list(self.coefs)
