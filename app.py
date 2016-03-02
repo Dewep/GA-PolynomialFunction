@@ -1,120 +1,136 @@
 import random
 import math
 import plotly
-import plotly.graph_objs as go
 
-pop_size = 500
-min_coefficient = -1000.0
-max_coefficient = min_coefficient * -1
-coefs_size = 6
-proba_crossover = 0.85
-proba_mutation = 0.0001
-mutation_rate = 0.00001
-nb_turns = 1500
+# Polynomial Function settings
+DATA_FILENAME    = "data.in"
+SIZE_COEFFICIENT = 6
+MIN_COEFFICIENT  = -1000.0
+MAX_COEFFICIENT  = 1000.0
+
+# Genetic Algorithm settings
+POP_SIZE         = 300
+NUMBER_OF_TURNS  = 2000
+PROBA_CROSSOVER  = 0.90
+PROBA_MUTATION   = 0.01
+RATE_MUTATION    = 0.00001
 
 
-tab_x = list()
-tab_y = list()
-real_tab_x = list()
-real_tab_y = list()
+# Fetching data
+target_x = list()
+target_y = list()
 
-with open("data.in") as input_file:
+with open(DATA_FILENAME) as input_file:
     for line in input_file:
-        line = line.strip()
-        numbers = line.split()
+        numbers = line.strip().split()
         if len(numbers) == 2:
-            real_tab_x.append(float(numbers[0]))
-            real_tab_y.append(float(numbers[1]))
+            target_x.append(float(numbers[0]))
+            target_y.append(float(numbers[1]))
 
-tab_x = real_tab_x
-tab_y = real_tab_y
 
+# Compute value from a X and a coefficients list
 def compute_value(coefs, x):
-    return coefs[0] + coefs[1] * x + coefs[2] * x * x + coefs[3] * x * x * x + coefs[4] * x * x * x * x + coefs[5] * x * x * x * x * x
+    # In order to have faster computations, we preferred not to use our original function (which is 3 times slower).
+    # -------------------
+    # value = 0
+    # for coef in range(SIZE_COEFFICIENT):
+    #     value += coefs[coef] * x**coef
+    # return value
+    return coefs[0] + coefs[1] * x + coefs[2] * x**2 + coefs[3] * x**3 + coefs[4] * x**4 + coefs[5] * x**5
 
 
-class solutionIndividual:
+# Class for each Individual Solution
+class IndividualSolution:
     def __init__(self, coefs):
         self.coefs = coefs
-        self._fitness = 0
-        self._compute_fitness()
-
-    @property
-    def fitness(self):
-        return self._fitness
-
-    def _compute_fitness(self):
-        self._fitness = 0
-        for index in range(len(tab_x)):
-            tmp = tab_y[index] - compute_value(self.coefs, tab_x[index])
-            self._fitness += tmp * tmp
-        self._fitness = math.sqrt(self._fitness)
+        self.fitness = 0
+        for index in range(len(target_x)):
+            self.fitness += abs(target_y[index] - compute_value(self.coefs, target_x[index]))
 
     def mutation(self):
-        index = random.randint(0, len(self.coefs) - 1)
-        mutation_value = abs(mutation_rate * self.coefs[index])
+        index = random.randint(0, SIZE_COEFFICIENT - 1)
+        mutation_value = abs(RATE_MUTATION * self.coefs[index])
         if random.random() < 0.5:
             mutation_value *= -1
         self.coefs[index] += mutation_value
 
-    def crossover(self, other): # Wright 1991
-        coefs1 = list(self.coefs)
-        coefs2 = list(self.coefs)
-        coefs3 = list(self.coefs)
-        for index in range(len(self.coefs)):
-            coefs1[index] = 0.5 * self.coefs[index] + 0.5 * other.coefs[index]
-            coefs2[index] = 1.5 * self.coefs[index] - 0.5 * other.coefs[index]
-            coefs3[index] = -0.5 * self.coefs[index] + 1.5 * other.coefs[index]
-        childs = [solutionIndividual(coefs1), solutionIndividual(coefs2), solutionIndividual(coefs3)]
+    def crossover(self, other): # linear crossover - Wright 1991
+        coefs1, coefs2, coefs3 = [], [], []
+        for index in range(SIZE_COEFFICIENT):
+            coefs1.append(0.5 * self.coefs[index] + 0.5 * other.coefs[index])
+            coefs2.append(1.5 * self.coefs[index] - 0.5 * other.coefs[index])
+            coefs3.append(-0.5 * self.coefs[index] + 1.5 * other.coefs[index])
+        childs = [IndividualSolution(coefs1), IndividualSolution(coefs2), IndividualSolution(coefs3)]
         return sorted(childs, key=lambda x: x.fitness)[:2]
 
+
+# Breeding (Crossover + Mutation on 2 individuals)
 def breeding(ind1, ind2):
-    if random.random() < proba_crossover:
+    if random.random() < PROBA_CROSSOVER:
         ind1, ind2 = ind1.crossover(ind2)
-    if random.random() < proba_mutation:
+    if random.random() < PROBA_MUTATION:
         ind1.mutation()
-    if random.random() < proba_mutation:
+    if random.random() < PROBA_MUTATION:
         ind2.mutation()
     return ind1, ind2
 
+
+# Generate the next population
 def next_pop(pop):
     pop = sorted(pop, key=lambda x: x.fitness)
     new_pop = list()
     new_pop.append(pop[0])
-    for i in range(math.floor(pop_size / 2)):
+    for i in range(math.floor(POP_SIZE / 2)):
         new_pop.extend(breeding(pop[i * 2], pop[i * 2 + 1]))
-    return new_pop
+    return new_pop[:POP_SIZE]
 
+
+# Generate a random solution
 def random_solution():
-    s = list()
-    for _ in range(coefs_size):
-        s.append(random.uniform(min_coefficient, max_coefficient))
-    return s
+    solution = list()
+    for _ in range(SIZE_COEFFICIENT):
+        solution.append(random.uniform(MIN_COEFFICIENT, MAX_COEFFICIENT))
+    return solution
 
-pop = [solutionIndividual(random_solution()) for _ in range(pop_size)]
-for turn in range(nb_turns):
-    if turn % (math.floor(nb_turns / 100)) == 0:
-        print("%3d%%: %s %f" % (math.floor(turn / nb_turns * 100), str(pop[0].coefs), pop[0].fitness))
+
+# Generate an initial random population
+pop = [IndividualSolution(random_solution()) for _ in range(POP_SIZE)]
+
+for turn in range(NUMBER_OF_TURNS):
+    # Generate the next population
     pop = next_pop(pop)
 
-best = pop[0]
-print(best.coefs)
-print(best.fitness)
+    # Compute the fitness evolution
+    # ...
 
-tab_x2 = list()
-tab_y2 = list()
-for index in range(len(tab_x)):
-    tab_x2.append(tab_x[index])
-    tab_y2.append(compute_value(best.coefs, tab_x[index]))
+    # ------------- DEBUG MESSAGE -------------
+    if turn % (math.floor(NUMBER_OF_TURNS / 100)) == 0:
+        print("%3d%%: %s  Fitness:%f" % (math.floor(turn / NUMBER_OF_TURNS * 100), str(pop[0].coefs), pop[0].fitness))
+    # -----------------------------------------
+
+
+# Selection of the best solution
+best = pop[0]
+print("\nBest solution: %s  Fitness: %f" % (best.coefs, best.fitness))
+
+
+# Generation of the graphs
+
+generated_x = list()
+generated_y = list()
+for index in range(len(target_x)):
+    generated_x.append(target_x[index])
+    generated_y.append(compute_value(best.coefs, target_x[index]))
 
 plotly.offline.plot({
-    "data": [
-        go.Scatter(x=tab_x, y=tab_y, name='Target curve'),
-        go.Scatter(x=tab_x2, y=tab_y2, name='Generated curve')
-    ],
-    "layout": {
-        "title": "Reproduce a curve using a Genetic Algorithm",
-        "xaxis": { "title": "x" },
-        "yaxis": { "title": "y" }
-    }},
-    filename='compare-results-tmp.html')
+        "data": [
+            plotly.graph_objs.Scatter(x=target_x, y=target_y, name='Target curve'),
+            plotly.graph_objs.Scatter(x=generated_x, y=generated_y, name='Generated curve')
+        ],
+        "layout": {
+            "title": "Reproduce a curve using a Genetic Algorithm",
+            "xaxis": { "title": "x" },
+            "yaxis": { "title": "y" }
+        }
+    },
+    filename='compare-results.html')
