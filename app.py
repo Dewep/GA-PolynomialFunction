@@ -107,4 +107,14 @@ for index in range(len(tab_x)):
     tab_x2.append(tab_x[index])
     tab_y2.append(compute_value(best.coefs, tab_x[index]))
 
-plotly.offline.plot([go.Scatter(x=tab_x, y=tab_y), go.Scatter(x=tab_x2, y=tab_y2)], filename='compare-results.html')
+plotly.offline.plot({
+    "data": [
+        go.Scatter(x=tab_x, y=tab_y, name='Target curve'),
+        go.Scatter(x=tab_x2, y=tab_y2, name='Generated curve')
+    ],
+    "layout": {
+        "title": "Reproduce a curve using a Genetic Algorithm",
+        "xaxis": { "title": "x" },
+        "yaxis": { "title": "y" }
+    }},
+    filename='compare-results-tmp.html')
