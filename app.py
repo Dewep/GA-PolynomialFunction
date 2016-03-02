@@ -2,6 +2,8 @@ import random
 import math
 import plotly
 
+# Best solution: [0.0007955062831871234, 5000.000066724238, 4.999999134503437, -61.999999996548524, 0.9999999999948588, -0.000999999999997464]  Fitness: 1.508722
+
 # Polynomial Function settings
 DATA_FILENAME    = "data.in"
 SIZE_COEFFICIENT = 6
@@ -9,7 +11,7 @@ MIN_COEFFICIENT  = -1000.0
 MAX_COEFFICIENT  = 1000.0
 
 # Genetic Algorithm settings
-POP_SIZE         = 300
+POP_SIZE         = 500
 NUMBER_OF_TURNS  = 2000
 PROBA_CROSSOVER  = 0.90
 PROBA_MUTATION   = 0.01
