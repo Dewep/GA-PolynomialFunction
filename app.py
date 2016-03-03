@@ -97,13 +97,14 @@ def random_solution():
 
 # Generate an initial random population
 pop = [IndividualSolution(random_solution()) for _ in range(POP_SIZE)]
+fitness = []
 
 for turn in range(NUMBER_OF_TURNS):
     # Generate the next population
     pop = next_pop(pop)
 
     # Compute the fitness evolution
-    # ...
+    fitness.append([pop[0].fitness, pop[-1].fitness, sum(x.fitness for x in pop) / POP_SIZE])
 
     # ------------- DEBUG MESSAGE -------------
     if turn % (math.floor(NUMBER_OF_TURNS / 100)) == 0:
@@ -136,3 +137,17 @@ plotly.offline.plot({
         }
     },
     filename='compare-results.html')
+
+plotly.offline.plot({
+        "data": [
+            plotly.graph_objs.Scatter(x=list(range(len(fitness))), y=list(map(lambda x: x[0], fitness)), name='Minimun fitness'),
+            plotly.graph_objs.Scatter(x=list(range(len(fitness))), y=list(map(lambda x: x[1], fitness)), name='Maximum fitness'),
+            plotly.graph_objs.Scatter(x=list(range(len(fitness))), y=list(map(lambda x: x[2], fitness)), name='Average fitness'),
+        ],
+        "layout": {
+            "title": "Evolution of fitness during a Genetic Algorithm",
+            "xaxis": { "title": "iteration" },
+            "yaxis": { "title": "fitness value" }
+        }
+    },
+    filename='compare-fitness.html')
