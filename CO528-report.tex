@@ -157,7 +157,7 @@ MIN_COEFFICIENT  = -1000.0
 MAX_COEFFICIENT  = 1000.0
 
 # Genetic Algorithm settings
-POP_SIZE         = 300
+POP_SIZE         = 500
 NUMBER_OF_TURNS  = 2000
 PROBA_CROSSOVER  = 0.90
 PROBA_MUTATION   = 0.01
@@ -243,13 +243,14 @@ def random_solution():
 
 # Generate an initial random population
 pop = [IndividualSolution(random_solution()) for _ in range(POP_SIZE)]
+fitness = []
 
 for turn in range(NUMBER_OF_TURNS):
     # Generate the next population
     pop = next_pop(pop)
 
     # Compute the fitness evolution
-    # ...
+    fitness.append([pop[0].fitness, pop[-1].fitness, sum(x.fitness for x in pop) / POP_SIZE])
 
     # ------------- DEBUG MESSAGE -------------
     if turn % (math.floor(NUMBER_OF_TURNS / 100)) == 0:
@@ -282,14 +283,28 @@ plotly.offline.plot({
         }
     },
     filename='compare-results.html')
+
+plotly.offline.plot({
+        "data": [
+            plotly.graph_objs.Scatter(x=list(range(len(fitness))), y=list(map(lambda x: x[0], fitness)), name='Minimun fitness'),
+            plotly.graph_objs.Scatter(x=list(range(len(fitness))), y=list(map(lambda x: x[1], fitness)), name='Maximum fitness'),
+            plotly.graph_objs.Scatter(x=list(range(len(fitness))), y=list(map(lambda x: x[2], fitness)), name='Average fitness'),
+        ],
+        "layout": {
+            "title": "Evolution of fitness during a Genetic Algorithm",
+            "xaxis": { "title": "iteration" },
+            "yaxis": { "title": "fitness value" }
+        }
+    },
+    filename='compare-fitness.html')
 \end{lstlisting}
 
-\section{Plot of the data points}
+\section{Plot of the target curve}
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.8\columnwidth]{./candidates.png}
-	\caption{Candidate solutions}
+	\includegraphics[width=1.0\columnwidth]{./plot_target.png}
+	\caption{Target curve}
 \end{figure}
 
 \section{Description of our Genetic Algorithm}
@@ -298,9 +313,9 @@ We randomly generate a population of 500 solutions. Each solution consists of 6 
 
 The next step is modifying the population. To do that, we order the solutions of the current population by their fitness in an ascending order, 0 being the best solution.
 
-We keep the first solution, the one that has the best fitness and we don’t modify it. We then cycle through the rest of the population, working with 2 solutions at a time.
+We keep the first solution, the one that has the best fitness and we do not modify it. We then cycle through all the population, working with 2 solutions at a time.
 
-With these 2 solutions we are going to generate 3 offsprings. Firstly, we generate a random number between 0 and 1 corresponding to the probability that crossover will be applied to that pair. Secondly, we use Wright’s linear crossover method to create 3 offsprings (with parents a and b, this method gives us 3 results consisting of 0.5a + 0.5b, 1.5a – 0.5b and -0.5a + 1.5b). Of these 3 offsprings, we select the 2 with the best fitness and use them for our new population instead of their parents. But before that, thirdly, there is a probability that a slight mutation will be applied to them. We chose a probability of 0.9 for the use of crossover and 0.01 for the mutation, with a mutation rate of 0.00001 since we realised that the most important part of the algorithm here was the crossover. We took in account the fact that a solution could be so good that it didn’t need any crossover or mutation, even if it is very unlikely, hence the values we used for the probabilities.
+With these 2 solutions we are going to generate 3 offsprings. Firstly, we generate a random number between 0 and 1 corresponding to the probability that crossover will be applied to that pair. Secondly, we use Wright's linear crossover method to create 3 offsprings (with parents a and b, this method gives us 3 results consisting of $0.5a + 0.5b$, $1.5a – 0.5b$ and $-0.5a + 1.5b$). Of these 3 offsprings, we select the 2 with the best fitness and use them for our new population instead of their parents. But before that, thirdly, there is a probability that a slight mutation will be applied to them. We chose a probability of 0.9 for the use of crossover and 0.01 for the mutation, with a mutation rate of 0.00001 since we realised that the most important part of the algorithm here was the crossover. We took in account the fact that a solution could be so good that it did not need any crossover or mutation, even if it is very unlikely, hence the values we used for the probabilities.
 
 We then have our new population, which is going to undergo the same steps, and so for a total of 1500 times and give us a solution with a fitness close to 0.
 
@@ -308,7 +323,7 @@ We then have our new population, which is going to undergo the same steps, and s
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.8\columnwidth]{./plot_fitness_evolution.png}
+	\includegraphics[width=1.0\columnwidth]{./plot_fitness_evolution.png}
 	\caption{Evolution of fitness during a Genetic Algorithm}
 \end{figure}
 
@@ -320,7 +335,7 @@ $$f(x) = 0.0 + 5000.0*x + 5.0*x^2 - 62.0*x^3 + 1.0*x^4 - 0.001*x^5$$
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.8\columnwidth]{./plot_solution.png}
+	\includegraphics[width=1.0\columnwidth]{./plot_solution.png}
 	\caption{Reproduce a curve using a Genetic Algorithm}
 \end{figure}
 
